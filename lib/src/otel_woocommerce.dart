@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_woocommerce_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_woocommerce';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class WoocommerceResult {
+  /// Creates a result.
   const WoocommerceResult({
     this.itemCount,
     this.totalCount,
@@ -62,8 +63,13 @@ class WoocommerceResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class WoocommerceCallResult<T> {
+  /// Creates a call result.
   const WoocommerceCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final WoocommerceResult? result;
 }
@@ -94,47 +100,47 @@ Future<T> tracedWoocommerce<T>({
   final span = _tracer().startSpan(
     'woocommerce $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.itemCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'woocommerce.item_count',
           r.result!.itemCount!,
         ));
       }
       if (r.result!.totalCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'woocommerce.total',
           r.result!.totalCount!,
         ));
       }
       if (r.result!.totalPages != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'woocommerce.total_pages',
           r.result!.totalPages!,
         ));
       }
       if (r.result!.page != null) {
-        extras.add(OTel.attributeInt('woocommerce.page', r.result!.page!));
+        extras.add(OTelAPI.attributeInt('woocommerce.page', r.result!.page!));
       }
       if (r.result!.perPage != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'woocommerce.per_page',
           r.result!.perPage!,
         ));
       }
       if (r.result!.resource != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'woocommerce.resource',
           r.result!.resource!,
         ));
       }
       if (r.result!.orderStatus != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'woocommerce.order.status',
           r.result!.orderStatus!,
         ));
@@ -146,31 +152,31 @@ Future<T> tracedWoocommerce<T>({
         }
       }
       if (r.result!.paymentMethod != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'woocommerce.payment_method',
           r.result!.paymentMethod!,
         ));
       }
       if (r.result!.totalAmountMinor != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'woocommerce.amount.total.minor',
           r.result!.totalAmountMinor!,
         ));
       }
       if (r.result!.currency != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'woocommerce.currency',
           r.result!.currency!,
         ));
       }
       if (r.result!.requestId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'woocommerce.request.id',
           r.result!.requestId!,
         ));
       }
       if (r.result!.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           r.result!.statusCode!,
         ));
@@ -181,13 +187,13 @@ Future<T> tracedWoocommerce<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
